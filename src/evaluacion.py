@@ -8,6 +8,7 @@ nunca la duplica.
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
 import numpy as np
@@ -20,12 +21,20 @@ RUTA_METRICAS = DIR_RESULTADOS / "metricas.csv"
 
 
 def evaluar(modelo, X_test, y_test) -> dict[str, float]:
-    """MAE, RMSE y R² del modelo (ya fiteado) sobre el test."""
+    """MAE, RMSE y R² del modelo (ya fiteado) sobre el test.
+
+    Incluye `pred_test_s`: el tiempo de predicción sobre el test completo —
+    la latencia que pagaría el hospital por puntuar toda una cartera de
+    admisiones (relevante para KNN y SVR, cuyo costo vive en la predicción).
+    """
+    t0 = time.perf_counter()
     pred = modelo.predict(X_test)
+    pred_test_s = time.perf_counter() - t0
     return {
         "mae": float(mean_absolute_error(y_test, pred)),
         "rmse": float(np.sqrt(mean_squared_error(y_test, pred))),
         "r2": float(r2_score(y_test, pred)),
+        "pred_test_s": round(pred_test_s, 2),
     }
 
 
