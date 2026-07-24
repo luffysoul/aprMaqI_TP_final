@@ -9,9 +9,11 @@
 
 **Pregunta:** ¿Cuántos días permanecerá internado un paciente diabético, estimado al momento de su ingreso hospitalario, a partir de la información clínica y administrativa disponible en la admisión?
 
-**Motivación de negocio.** La duración de la estadía (*length of stay*) es uno de los principales determinantes del costo hospitalario y de la disponibilidad de camas. Un modelo que prediga los días de internación con un error medio bajo permite: (a) planificar la ocupación de camas y quirófanos, (b) dimensionar personal de enfermería por adelantado, y (c) detectar tempranamente pacientes con riesgo de estadía prolongada. La métrica de éxito es directamente interpretable por la gestión: **MAE en días de estadía**, comparada contra un piso ingenuo (predecir siempre el promedio histórico).
+**Motivación de negocio.** La duración de la estadía (*length of stay*) es uno de los principales determinantes del costo hospitalario y de la disponibilidad de camas. La métrica de éxito es directamente interpretable por la gestión: **MAE en días de estadía**, comparada contra el piso ingenuo de predecir siempre el promedio histórico.
 
-**Problema de ML:** regresión supervisada. Target: `time_in_hospital` (1 a 14 días). Se comparan cinco familias de modelos vistas en la materia (KNN, SVR, árbol de regresión, Random Forest, XGBoost) contra baselines simples, con optimización de hiperparámetros por validación cruzada.
+**Problema de ML:** regresión supervisada sobre `time_in_hospital` (1–14 días). Se comparan cinco familias (KNN, SVR lineal/RBF, árbol de regresión podado, Random Forest, XGBoost) contra baselines simples, con hiperparámetros optimizados por validación cruzada (KFold 5, seed 42, solo sobre train) y una única evaluación final sobre el test completo.
+
+**Resultado principal:** XGBoost (`reg:absoluteerror`) alcanza **MAE 1,746 días** vs. 2,280 del baseline (−23,4%), con 12 s de entrenamiento y 0,1 s de predicción sobre 20.354 pacientes. Ningún modelo supera R² ≈ 0,35: el techo de predictibilidad con variables de admisión es un hallazgo central del trabajo (ver notebook 07).
 
 ## Fuente de datos
 
@@ -19,34 +21,54 @@
 >
 > Dataset: **Diabetes 130-US Hospitals for Years 1999–2008** — UCI Machine Learning Repository. DOI: [10.24432/C5230J](https://doi.org/10.24432/C5230J) · Licencia: CC BY 4.0.
 
-El análisis exploratorio y el preprocesamiento provienen del trabajo final de la materia Análisis de Datos (Grupo 3, mismo autor), donde se documentó el tratamiento columna por columna: [repo CEIA_Analisis_de_datos](https://github.com/masouto94/CEIA_Analisis_de_datos). Aquí se incluye solo el resumen (criterio de la cátedra: el foco de esta materia es entrenamiento y evaluación).
+El análisis exploratorio y el preprocesamiento provienen del trabajo final de Análisis de Datos (Grupo 3, mismo autor): [CEIA_Analisis_de_datos](https://github.com/masouto94/CEIA_Analisis_de_datos). Aquí se incluye solo el resumen (notebook 01), según el criterio de la cátedra de enfocar esta materia en entrenamiento y evaluación.
+
+## Orden de lectura y tiempos de ejecución
+
+| # | Notebook | Contenido | Ejecución* |
+|---|----------|-----------|-----------|
+| 01 | `01_dataset_preprocesamiento` | Propuesta, cita, preprocesamiento resumido, split, parquets congelados, checklist anti-fuga | 26 s |
+| 02 | `02_baseline` | DummyRegressor (media/mediana) + regresión lineal; evidencia media-vs-mediana | 8 s |
+| 03 | `03_knn` | KNN regressor: grilla 32 configs × CV5, curva k vs MAE | 3,4 min |
+| 04 | `04_svr` | LinearSVR (train completo) + SVR-RBF (Optuna en submuestra, refit completo, limitación documentada) | 9,5 min |
+| 05 | `05_arbol` | Demostración de sobreajuste + poda por costo-complejidad (α por CV) + árbol visualizado | 2,5 min |
+| 06 | `06_ensambles` | Random Forest (OOB≈CV) + XGBoost (decisión D4 con evidencia) + feature importance ×2 métodos ×2 modelos | 1,6 min |
+| 07 | `07_comparacion_conclusiones` | Tabla final, lectura global, conclusiones, límites y caminos futuros | 8 s |
+
+\* Tiempos de la corrida limpia de verificación (laptop 8 núcleos, con `optuna.db` presente — ver Reproducibilidad).
 
 ## Cómo reproducir
 
 ```bash
 # 1. Instalar uv (https://docs.astral.sh/uv/)
-# 2. Crear el entorno e instalar dependencias exactas
+# 2. Entorno con versiones exactas (uv.lock)
 uv sync
-# 3. Ejecutar los notebooks en orden (01 → 07) con el kernel del entorno .venv
+# 3. Ejecutar los notebooks en orden 01 -> 07:
 uv run jupyter nbconvert --to notebook --execute --inplace notebooks/01_dataset_preprocesamiento.ipynb
-uv run jupyter nbconvert --to notebook --execute --inplace notebooks/02_baseline.ipynb
-# ... (repetir para el resto)
-# Tests del código compartido
+# ... (repetir para 02..07; SIEMPRE en secuencia, nunca en paralelo:
+#      metricas.csv y optuna.db no admiten escritores concurrentes)
+# 4. Tests del código compartido
 uv run pytest tests/ -v
 ```
 
-El notebook 01 descarga el dataset crudo automáticamente si no está en `data/raw/`, y persiste los splits limpios (sin codificar) en `data/processed/*.parquet`. Todos los notebooks posteriores consumen esos parquets: la codificación (OneHot/TargetEncoder) y el escalado ocurren **exclusivamente** dentro del `Pipeline` de cada modelo (`src/pipelines.py`) para impedir fuga de datos.
+### Dos niveles de reproducibilidad (verificados)
 
-## Índice de notebooks
+- **Nivel 1 — con `optuna.db` presente (ejecutado y verificado):** entorno recreado desde cero (`rm .venv && uv sync`) + Run All 01→07. Las búsquedas de Optuna son **idempotentes** (cargan los trials existentes del storage sqlite y no agregan nuevos), las grillas de KNN/LinearSVR y toda la CV se recomputan completas. Tiempo total: **~18 minutos**. Resultado verificado: las 9 filas de `resultados/metricas.csv` se reproducen **idénticas a 12 decimales**.
+- **Nivel 2 — desde cero absoluto (documentado, no requerido):** borrar `optuna.db` re-ejecuta las búsquedas completas (~1,5 h). Como todos los samplers usan `TPESampler(seed=42)` y los objetivos son deterministas (CV con seed, modelos con seed), los trials se regeneran con las mismas propuestas y el resultado converge a las mismas configuraciones.
 
-| # | Notebook | Contenido |
-|---|----------|-----------|
-| 01 | `01_dataset_preprocesamiento` | Propuesta, cita, dataset, preprocesamiento resumido, split, parquets |
-| 02 | `02_baseline` | DummyRegressor (media/mediana) + regresión lineal de referencia |
-| 03 | `03_knn` | KNN regressor + búsqueda de hiperparámetros |
-| 04 | `04_svr` | SVR lineal vs RBF |
-| 05 | `05_arbol` | Árbol de regresión + poda por costo-complejidad (α) |
-| 06 | `06_ensambles` | Random Forest + XGBoost + feature importance |
-| 07 | `07_comparacion_conclusiones` | Tabla comparativa, conclusiones, caminos futuros |
+Notas de reproducibilidad: semilla global `SEED=42` (`src/config.py`) en split, CV, TargetEncoder (KFold interno), submuestras, Optuna, RF y XGBoost. `data/processed/*.parquet` contiene los splits **limpios sin codificar**: toda transformación con estado (OneHot, TargetEncoder, escalado) vive dentro del `Pipeline` de cada modelo (`src/pipelines.py`) y se re-fitea por fold — el diseño hace estructuralmente imposible la fuga de datos hacia el test.
 
-Semilla global: `SEED = 42` (definida en `src/config.py`). Resultados acumulados en `resultados/metricas.csv` (upsert por modelo).
+## Checklist de criterios oficiales
+
+| Criterio | Dónde se satisface |
+|---|---|
+| 1. Propuesta de investigación | NB01 §1 (celda 1) + este README |
+| 2. Cita de la fuente de datos | NB01 §2 (celda 2, con DOI y licencia) + este README |
+| 3. Dataset con preprocesamiento resumido | NB01 §3 (celda 4: tabla-síntesis de decisiones con link al trabajo de AdD) |
+| 4. Baseline simple (sin regresión logística) | NB02 completo (celda 1 justifica por qué la logística no aplica a regresión) |
+| 5. Justificación de cada algoritmo vs. otras opciones | Celda de apertura de NB03, NB04, NB05 y NB06 |
+| 6. Métricas claras con lectura de negocio | `src/evaluacion.py` + NB07 (tabla con MAE/RMSE/R²/tiempos + lectura global en días de estadía) |
+| 7. Código reproducible | `uv.lock` + seeds + parquets congelados + corrida limpia verificada (sección anterior) + `tests/` |
+| 8. Reflexión y caminos futuros | NB07 §Conclusiones (celda final: respuesta, límites honestos, 6 caminos futuros, reflexión) |
+
+Grupo individual: justificado ante los docentes por correo (excepción prevista en los criterios).
