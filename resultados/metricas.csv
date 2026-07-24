@@ -1,0 +1,4 @@
+modelo,mae,rmse,r2,notas
+baseline_media,2.2804982182217524,3.0009075455611454,-0.010713600672000112,DummyRegressor(mean); predictor constante
+baseline_mediana,2.292915397464872,3.295224494759906,-0.218689005901733,DummyRegressor(median); minimiza MAE entre constantes
+regresion_lineal,1.8616423486468183,2.466618112134765,0.3171478029300377,OLS sobre las 17 features del preprocesador comun

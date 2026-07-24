@@ -1,0 +1,46 @@
+[project]
+name = "aprmaqi-tp-final"
+version = "0.1.0"
+description = "TP Final Aprendizaje de Máquina I (CEIA-FIUBA) — Predicción de días de internación (Diabetes 130-US Hospitals)"
+authors = [
+    { name = "Jaime Pinzón" },
+]
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ipykernel>=7.3.0",
+    "jupyter>=1.1.1",
+    "matplotlib>=3.11.0",
+    "numpy>=2.5.0",
+    "optuna>=4.9.0",
+    "pandas>=3.0.3",
+    "pyarrow>=19.0.0",
+    "scikit-learn>=1.9.0",
+    "scipy>=1.18.0",
+    "seaborn>=0.13.2",
+    "xgboost>=3.3.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "PL"]
+ignore = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

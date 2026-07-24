@@ -1,0 +1,12 @@
+# Entornos
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+# Datos crudos pesados (se descargan con el notebook 01)
+data/raw/*.zip
+# Optuna storage (se regenera)
+optuna.db
+# SO
+.DS_Store
+Thumbs.db
