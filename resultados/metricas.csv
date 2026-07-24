@@ -1,4 +1,8 @@
-modelo,mae,rmse,r2,notas
-baseline_media,2.2804982182217524,3.0009075455611454,-0.010713600672000112,DummyRegressor(mean); predictor constante
-baseline_mediana,2.292915397464872,3.295224494759906,-0.218689005901733,DummyRegressor(median); minimiza MAE entre constantes
-regresion_lineal,1.8616423486468183,2.466618112134765,0.3171478029300377,OLS sobre las 17 features del preprocesador comun
+modelo,mae,rmse,r2,notas,tiempo_s
+baseline_media,2.2804982182217524,3.0009075455611454,-0.010713600672000112,DummyRegressor(mean); predictor constante,0.09
+baseline_mediana,2.292915397464872,3.295224494759906,-0.218689005901733,DummyRegressor(median); minimiza MAE sobre la dist. del train,0.05
+regresion_lineal,1.8616423486468183,2.466618112134765,0.3171478029300377,OLS sobre las 17 features del preprocesador comun,0.1
+knn,1.8341394922857723,2.473058280278219,0.3135773888747734,"k=80, weights=distance, p=1; grilla 32 configs x CV5; busqueda 3.3 min; escalado dentro del pipeline",0.11
+svr_lineal,1.8342626900383583,2.516802585200808,0.2890792645041837,"LinearSVR C=0.01, eps=0.5; train completo; busqueda 6.9 min",0.3
+svr_rbf,1.7686584251672428,2.442488021735593,0.3304426776499758,"SVR-RBF ['C=8.598', 'epsilon=0.4397', 'gamma=0.00936']; busqueda TPE 40 trials en submuestra 16k del train (18 min); refit en train completo (1.8 min)",110.2
+arbol_podado,1.858482300802049,2.4828956448692194,0.3081056053637367,"ccp_alpha=9.62e-04 por CV5 sobre 25 candidatos; 326 hojas, prof. 15",6.05
