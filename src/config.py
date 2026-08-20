@@ -9,7 +9,15 @@ DIR_RAW = RAIZ / "data" / "raw"
 DIR_PROCESSED = RAIZ / "data" / "processed"
 DIR_RESULTADOS = RAIZ / "resultados"
 
+DIR_NOTEBOOKS = RAIZ / "notebooks"
+
 CSV_CRUDO = DIR_RAW / "diabetic_data.csv"
+
+# Storage sqlite de Optuna, en ruta ABSOLUTA. Los notebooks se ejecutan con el
+# cwd en notebooks/ desde Jupyter pero desde la raiz con nbconvert segun como se
+# invoque, y una URL relativa ("sqlite:///optuna.db") crearia dos bases distintas
+# segun desde donde se corra -- perdiendo silenciosamente los trials ya hechos.
+STORAGE_OPTUNA = f"sqlite:///{(DIR_NOTEBOOKS / 'optuna.db').as_posix()}"
 URL_UCI = (
     "https://archive.ics.uci.edu/static/public/296/"
     "diabetes+130-us+hospitals+for+years+1999-2008.zip"

@@ -1,10 +1,11 @@
-modelo,mae,rmse,r2,notas,tiempo_s,pred_test_s
-baseline_media,2.2804982182217524,3.0009075455611454,-0.0107136006720001,DummyRegressor(mean); predictor constante,0.09,0.01
-baseline_mediana,2.292915397464872,3.295224494759906,-0.218689005901733,DummyRegressor(median); minimiza MAE sobre la dist. del train,0.05,0.01
-regresion_lineal,1.8616423486468183,2.466618112134765,0.3171478029300377,OLS sobre las 17 features del preprocesador comun,0.08,0.02
-knn,1.8341394922857723,2.473058280278219,0.3135773888747734,"k=80, weights=distance, p=1; grilla 32 configs x CV5; busqueda 3.1 min; escalado dentro del pipeline",0.1,7.4
-svr_lineal,1.8342626900383583,2.516802585200808,0.2890792645041837,"LinearSVR C=0.01, eps=0.5; train completo; busqueda 6.1 min",0.24,0.02
-svr_rbf,1.7686584251672428,2.442488021735593,0.3304426776499758,"SVR-RBF ['C=8.598', 'epsilon=0.4397', 'gamma=0.00936']; busqueda TPE 40 trials en submuestra 16k del train (0 min); refit en train completo (1.8 min)",107.99,83.07
-arbol_podado,1.858482300802049,2.4828956448692194,0.3081056053637367,"ccp_alpha=9.62e-04 por CV5 sobre 25 candidatos; 326 hojas, prof. 15",5.77,0.02
-random_forest,1.7979753637148943,2.399378011157664,0.3538695211973283,"RF {'n_estimators': 500, 'max_features': 0.37091014845513426, 'min_samples_leaf': 5, 'max_depth': 19}; TPE 30 trials (0 min); OOB MAE 1.6550",9.96,0.35
-xgboost,1.7462856286580828,2.417552718100124,0.34404388462602065,"XGB objective=reg:absoluteerror, {'learning_rate': 0.025401015299119936, 'max_depth': 5, 'subsample': 0.7841253609975511, 'colsample_bytree': 0.8800515256888735, 'reg_alpha': 8.986804159713579, 'reg_lambda': 0.0016279713228651595}, n_estimators=647 (early stopping en val interna 10% del train); TPE 40 trials (0 min)",11.21,0.08
+modelo,mae_cv,mae,rmse,r2,tiempo_s,pred_test_s,notas
+baseline_media,2.0688963715297097,2.2804982182217524,3.0009075455611454,-0.0107136006720001,0.05,0.01,DummyRegressor(mean) sobre el train filtrado; predictor constante
+baseline_mediana,2.0280709715956657,2.292915397464872,3.295224494759906,-0.218689005901733,0.05,0.01,DummyRegressor(median) sobre el train filtrado
+regresion_lineal,1.7081269914428885,1.8616423486468183,2.466618112134765,0.3171478029300377,0.11,0.03,OLS sobre las 17 features del preprocesador comun
+knn,1.677463604977745,1.8341394922857723,2.473058280278219,0.3135773888747734,0.13,8.15,"k=80, weights=distance, p=1; grilla 32 configs x CV5; busqueda 3.7 min; escalado dentro del pipeline"
+svr_lineal,1.6794570030507772,1.8342626900383583,2.516802585200808,0.2890792645041837,0.27,0.02,"LinearSVR C=0.01, eps=0.5; train completo; grilla 18 configs x CV5 (extendida a C>=1e-4 por regla D7); busqueda 7.5 min"
+svr_rbf,1.628251974494632,1.7686584251672428,2.442488021735593,0.3304426776499758,123.31,94.09,"SVR-RBF ['C=8.598', 'epsilon=0.4397', 'gamma=0.00936']; BUSQUEDA: TPE 40 trials en submuestra 16k del train; refit en train completo (2.1 min); mae_cv por KFold-5 sobre train completo (0.0 min)"
+arbol_podado,1.7362474112149175,1.858482300802049,2.4828956448692194,0.3081056053637367,5.9,0.02,"ccp_alpha=9.62e-04 por CV5 sobre 25 candidatos; 326 hojas, prof. 15"
+random_forest,1.6529722176987476,1.7979753637148943,2.399378011157664,0.3538695211973283,10.37,0.38,"RF {'n_estimators': 500, 'max_features': 0.37091014845513426, 'min_samples_leaf': 5, 'max_depth': 19}; TPE 30 trials con CV5 sobre train completo; OOB MAE 1.6550"
+xgboost,1.607311083890282,1.7476947076330955,2.417507937088639,0.3440681853215638,13.04,0.18,"XGB objective=reg:absoluteerror, {'learning_rate': 0.010457065772553623, 'max_depth': 8, 'subsample': 0.6634274931179873, 'colsample_bytree': 0.5502318092380184, 'reg_alpha': 0.3818481521279466, 'reg_lambda': 3.328611400908887}, n_estimators=813; BUSQUEDA: TPE 40 trials con holdout interno 10% (espacio extendido por D7); mae_cv por KFold-5 sobre train completo (0.0 min)"
+baseline_mediana_sin_filtrar,2.042878353162608,2.2596049916478336,3.0110993129450576,-0.0175904870511796,0.0,0.0,Constante = mediana del train SIN filtro IQR (4.0 dias); piso honesto: iguala el optimo entre constantes sin mirar el test

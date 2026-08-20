@@ -5,8 +5,14 @@ __pycache__/
 .ipynb_checkpoints/
 # Datos crudos pesados (se descargan con el notebook 01)
 data/raw/*.zip
-# Optuna storage (se regenera)
-optuna.db
+# NOTA: notebooks/optuna.db SI se versiona a proposito. Es el storage sqlite de
+# los estudios de Optuna (~200 KB) y es lo que hace que el "Nivel 1" de
+# reproducibilidad del README (~20 min, resultados identicos) este disponible
+# para quien clona el repo. Sin el, la unica via seria re-ejecutar todas las
+# busquedas (~1,5 h), que es justamente el nivel que NO esta verificado.
 # SO
 .DS_Store
 Thumbs.db
+
+# Herramientas locales de Claude Code (no forman parte de la entrega)
+.claude/
